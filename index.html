@@ -89,13 +89,14 @@ button:focus-visible,.hot:focus-visible{outline:3px solid var(--accent);outline-
 .ar-tr{display:block;margin-top:4px;font-style:normal;font-family:"Noto Sans Arabic",Tahoma,sans-serif;font-size:1.05rem}
 /* home */
 .home{gap:18px}
-.hero{position:relative;border-radius:16px;overflow:hidden;min-height:300px;display:flex;align-items:flex-end;background:var(--grass) center 60%/cover no-repeat}
-.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,var(--scrim) 0%,rgba(6,18,10,.55) 55%,rgba(6,18,10,.15) 100%)}
-.hero-in{position:relative;padding:28px;display:grid;gap:10px;max-width:560px;color:var(--on-photo)}
+.hero{position:relative;border-radius:16px;overflow:hidden;min-height:280px;display:flex;align-items:center;justify-content:center;background:var(--grass) center 60%/cover no-repeat}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(6,18,10,.78) 0%,rgba(6,18,10,.6) 55%,rgba(6,18,10,.35) 100%)}
+.hero-in{position:relative;padding:28px 16px;display:grid;gap:10px;justify-items:center;text-align:center;width:100%;color:var(--on-photo);container-type:inline-size}
 .eyebrow{font:600 .9rem var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
 .hero h1{color:var(--on-photo)}
 .hero h1 span{color:var(--accent)}
-.tagline{margin:0;font-size:1.05rem;opacity:.92;max-width:40ch}
+/* one line at every width: the text scales with the banner width */
+.tagline{margin:0;white-space:nowrap;font-size:1.15rem;opacity:.95;max-width:100%}
 .hero-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
 .btn.cta{font-size:1.15rem;padding:12px 22px}
 .btn.ghost{border-color:var(--on-photo);color:var(--on-photo);font-size:1.15rem;padding:12px 22px}
@@ -282,11 +283,7 @@ button:focus-visible,.hot:focus-visible{outline:3px solid var(--accent);outline-
       <div class="hero-in">
         <div class="eyebrow">English vocabulary · Football</div>
         <h1>Football <span>Word Kit</span></h1>
-        <p class="tagline">Learn 36 football words in English, with photos, sound and a quiz.</p>
-        <div class="hero-btns">
-          <button class="btn primary cta" id="goLearn" type="button">Start learning</button>
-          <button class="btn ghost" id="goQuiz" type="button">Take the quiz</button>
-        </div>
+        <p class="tagline">Learn football words in English, with photos, sound and a quiz.</p>
       </div>
     </div>
 
@@ -866,7 +863,7 @@ function tick(){if(!whistleOn)return;try{const ctx=audioCtx(),t=ctx.currentTime;
   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.07);
   o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+.08)}catch(e){}}
 document.addEventListener("click",e=>{
-  if(e.target.closest("#tab-cards,#tab-quiz,#goQuiz,#goLearn,#resumeBtn,.chip,.tile"))tick();
+  if(e.target.closest("#tab-cards,#tab-quiz,#resumeBtn,.chip,.tile"))tick();
   else if(e.target.closest("#tab-home,#brand")&&!musicOn)tick();   /* Home has its own music */
 });
 const TILE_PHOTO={"The pitch":["touchline","50% 62%"],"Players":["captain","50% 25%"],"Actions":["dribble","50% 45%"],"Rules":["yellow card","50% 20%"]};
@@ -887,6 +884,7 @@ try{
   localStorage.setItem("fwk-streak",JSON.stringify({last:today,n:streak}));
 }catch(e){}
 function refreshHome(){
+  setTimeout(fitTagline,0);
   const total=WORDS.length,n=learned.size;
   $("#learnedN").textContent=n;$("#totalN").textContent=total;
   $("#ringFg").style.strokeDashoffset=163.4*(1-n/total);
@@ -915,10 +913,13 @@ function refreshHome(){
     b.onclick=()=>openSection(c);tiles.appendChild(b);
   });
 }
-$("#goLearn").onclick=()=>{let last=null;try{last=JSON.parse(localStorage.getItem("fwk-last")||"null")}catch(e){}
-  last&&WORDS.some(w=>w.id===last.id)?openSection(last.c,last.id):openSection("The pitch")};
-$("#goQuiz").onclick=()=>showTab("quiz");
 $("#brand").onclick=()=>showTab("home");
+/* keep the tagline on one line: shrink its font until it fits the banner */
+function fitTagline(){const t=document.querySelector(".tagline");if(!t||!t.offsetParent)return;
+  const max=18.4,avail=t.parentElement.clientWidth-32;let f=max;t.style.fontSize=f+"px";
+  while(t.scrollWidth>avail&&f>9){f-=.25;t.style.fontSize=f+"px"}}
+addEventListener("resize",fitTagline);
+try{document.fonts&&document.fonts.ready.then(fitTagline)}catch(e){}
 /* settings popover */
 const gear=$("#gear"),panel=$("#settings");
 gear.onclick=e=>{e.stopPropagation();const open=panel.hidden;panel.hidden=!open;gear.setAttribute("aria-expanded",open)};
